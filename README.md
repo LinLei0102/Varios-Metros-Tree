@@ -1,4 +1,8 @@
-# The-Modding-Tree
+# Varios-Metros-Tree
+
+全名：数一亿粒米树
+
+作者：loader3229
 
 An incremental game engine based on The Prestige Tree. It still requires programming knowledge, but it's mostly pretty easy things and copy/pasting.
 
