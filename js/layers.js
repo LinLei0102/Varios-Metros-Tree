@@ -1,7 +1,7 @@
 addLayer("p", {
     name: "P", // This is optional, only used in a few places, If absent it just uses the layer id.
     symbol: "数米", // This appears on the layer's node. Default is the id with the first letter capitalized
-    position: 0, // Horizontal position within a row. By default it uses the layer id and sorts in alphabetical order
+    position: 1, // Horizontal position within a row. By default it uses the layer id and sorts in alphabetical order
     startData() { return {
         unlocked: true,
 		points: new Decimal(0),
@@ -18,7 +18,7 @@ addLayer("p", {
 		mult = mult.mul(getLevel().div(2).max(1));
 		if(getELevel().gte(1500))mult = mult.mul(getELevel().div(100).max(1)); else mult = mult.mul(getELevel().sqrt().div(4).max(1));
 		if(getRank().gte(15))mult = mult.mul(getRank().div(2).max(1));else mult = mult.mul(getRank().div(5).add(1));
-		if(hasAchievement("a",11))mult = mult.mul(player.a.points.div(10).add(1));
+		if(hasAchievement("a",111))mult = mult.mul(player.a.points.add(1));else if(hasAchievement("a",11))mult = mult.mul(player.a.points.div(10).add(1));
 		mult = mult.mul(layers.s.effect3());
 		if(hasAchievement("a",14) && a)mult = mult.mul(2);
 		if(hasAchievement("a",24) && a)mult = mult.mul(2);
@@ -33,7 +33,7 @@ addLayer("p", {
     gainExp() { // Calculate the exponent on main currency from bonuses
         return new Decimal(1)
     },
-    row: 0, // Row the layer is in on the tree (0 is the first row)
+    row: 1, // Row the layer is in on the tree (0 is the first row)
     hotkeys: [
     ],
 	clickables: {
@@ -126,6 +126,18 @@ addLayer("p", {
 				},
                 style: {'height':'100px','width':'150px'},
             },
+            24: {
+                title: "自动购买米袋加成",
+                display(){
+					return player.p.a6?("已开启"):"已关闭";
+				},
+                unlocked() { return getRank().gte(185)}, 
+				canClick(){return true},
+				onClick(){
+					player.p.a6=!player.p.a6;
+				},
+                style: {'height':'100px','width':'150px'},
+            },
 	},
 	update(diff){
 		if(getLevel().gte(5)){
@@ -183,6 +195,13 @@ addLayer("p", {
 				player.p.buyables[22]=target;
 			}
 		}
+		if(getRank().gte(185)&&player.p.a6){
+			let target=player.p.points.add(player.p.buyables[23].pow(15)).root(15).floor().max(player.p.buyables[23]);
+			if(player.p.points.gte(target.pow(15).sub(player.p.buyables[23].pow(15)))){
+				player.p.points=player.p.points.sub(target.pow(15).sub(player.p.buyables[23].pow(15)).mul(buyableEffect("t",21)));
+				player.p.buyables[23]=target;
+			}
+		}
 	},
 	tabFormat: [
 		"main-display","clickables","buyables","milestones"
@@ -199,7 +218,7 @@ addLayer("p", {
 					return player[this.layer].buyables[this.id].mul(layers.t.buyables[23].effect());
 				},
                 effect(x=player[this.layer].buyables[this.id]) { // Effects of owning x of the items, x is a decimal
-					let eff = Decimal.add(1, x)
+					let eff = Decimal.add(1, x.pow(layers.g.effect2()))
 					if(getRank().gte(4))eff = eff.mul(getLevel().div(400));
 					if(getRank().gte(7))eff = eff.mul(buyableEffect("p",13));
 					if(getELevel().gte(150))eff = eff.mul(getELevel().div(100));
@@ -207,11 +226,12 @@ addLayer("p", {
 					if(hasAchievement("a",26))eff = eff.mul(player.a.points.div(10).add(1));
 					eff = eff.mul(getRankEffect2());
 					eff = eff.mul(layers.s.effect1());
+					eff = eff.mul(layers.n.effect());
 					return eff;
                 },
                 display() { // Everything else displayed in the buyable button after the title
                     let data = tmp[this.layer].buyables[this.id]
-					return "等级："+formatWhole(player[this.layer].buyables[this.id])+"\n\
+					return "等级："+formatWhole(player[this.layer].buyables[this.id])+(getRank().gte(100)?"<sup>"+format(layers.g.effect2())+"</sup>":"")+"\n\
 					数米能力：" + formatWhole(data.effect) + "粒/次\n\
 					花费：" + formatWhole(data.cost) + " 金币"+(getRank().gte(15)?("\n\
 					当前总计花费：" + formatWhole(data.totalCost) + " 金币"):"");
@@ -245,6 +265,7 @@ addLayer("p", {
 					eff = eff.mul(buyableEffect("t",22));
 					if(hasAchievement("a",71))eff = eff.mul(buyableEffect("p",21).add(1));
 					eff = eff.mul(layers.s.effect7());
+					eff = eff.mul(layers.g.effect1());
 					return eff;
                 },
                 display() { // Everything else displayed in the buyable button after the title
@@ -352,7 +373,7 @@ addLayer("p", {
 					if(getRank().gte(65))return player[this.layer].buyables[this.id].pow(9);
 				},
                 effect(x=player[this.layer].buyables[this.id]) { // Effects of owning x of the items, x is a decimal
-					let eff = new Decimal(x).div(10).add(1);
+					let eff = new Decimal(x).div(getRank().gte(110)?1:10).add(1);
 					return eff;
                 },
                 display() { // Everything else displayed in the buyable button after the title
@@ -402,6 +423,7 @@ addLayer("p", {
 				},
                 effect(x=player[this.layer].buyables[this.id]) { // Effects of owning x of the items, x is a decimal
 					let eff = new Decimal(x).mul(3).add(1).log10().add(1).sqrt();
+					if(getRank().gte(160))eff = new Decimal(x).mul(3).add(1).log10().add(1);
 					return eff;
                 },
                 display() { // Everything else displayed in the buyable button after the title
@@ -559,7 +581,7 @@ addLayer("e", {
     gainExp() { // Calculate the exponent on main currency from bonuses
         return new Decimal(1)
     },
-    row: 1, // Row the layer is in on the tree (0 is the first row)
+    row: 2, // Row the layer is in on the tree (0 is the first row)
     hotkeys: [
     ],
 	branches: ['p'],
@@ -594,12 +616,30 @@ addLayer("e", {
 		if(getELevel().gte(5)){
 			player.e.points=layers.e.getEffectiveEPoints(layers.e.getRawEPoints().add(layers.e.gainMult().mul(getELevel().gte(20000)?player.points.add(1).pow(0.2):getELevel().gte(12000)?player.points.add(1).pow(0.05):1).mul(buyableEffect("e",21)).mul(diff)));
 		}
-		if(getELevel().gte(4000)&&player.e.a1){
+		if(getELevel().gte(300000)){
+			delete player.e.a1;
+			let target=player.p.points.root(3).floor();
+			player.e.buyables[21]=player.e.buyables[21].max(target);
+		}else if(getELevel().gte(4000)&&player.e.a1){
 			let target=player.p.points.div(2).add(player.e.buyables[21].pow(4)).root(4).floor().max(player.e.buyables[21]);
 			if(player.p.points.gte(target.pow(4).sub(player.e.buyables[21].pow(4)))){
 				player.p.points=player.p.points.sub(target.pow(4).sub(player.e.buyables[21].pow(4)));
 				player.e.buyables[21]=target;
 			}
+		}
+		if(getELevel().gte(200000)){
+			let target=player.p.points.add(1).log(1.25).max(0).ceil();
+			if(player.e.buyables[11].lte(target))player.e.buyables[11]=target;
+			target=player.p.points.add(1).log(1.28).max(0).ceil();
+			if(player.e.buyables[12].lte(target))player.e.buyables[12]=target;
+			target=player.p.points.add(1).log(1.31).max(0).ceil();
+			if(player.e.buyables[13].lte(target))player.e.buyables[13]=target;
+			target=player.p.points.add(1).log(1.34).max(0).ceil();
+			if(player.e.buyables[14].lte(target))player.e.buyables[14]=target;
+			target=player.p.points.add(1).log(1.37).max(0).ceil();
+			if(player.e.buyables[15].lte(target))player.e.buyables[15]=target;
+			target=player.p.points.add(1).log(1.4).max(0).ceil();
+			if(player.e.buyables[16].lte(target))player.e.buyables[16]=target;
 		}
 	},
 	milestones: [
@@ -806,6 +846,20 @@ addLayer("e", {
 				return "根据总计数米的数量，吃米速度更快。";
 			},
         },
+		{
+			requirementDescription: "吃掉200000桶米",
+            done() {return getELevel().gte(200000)}, // Used to determine when to give the milestone
+            effectDescription: function(){
+				return "自动购买吃米小鸟，吃米小鸟加成更好，购买吃米小鸟不消耗金币。";
+			},
+        },
+		{
+			requirementDescription: "吃掉300000桶米",
+            done() {return getELevel().gte(300000)}, // Used to determine when to give the milestone
+            effectDescription: function(){
+				return "始终自动购买自动吃米，自动吃米更便宜，购买自动吃米不消耗金币。";
+			},
+        },
 	],
 	clickables: {
             11: {
@@ -825,7 +879,7 @@ addLayer("e", {
                 display(){
 					return player.e.a1?("已开启"):"已关闭";
 				},
-                unlocked() { return getELevel().gte(4000)}, 
+                unlocked() { return getELevel().gte(4000) && getELevel().lte(300000)}, 
 				canClick(){return true},
 				onClick(){
 					player.e.a1=!player.e.a1;
@@ -842,6 +896,7 @@ addLayer("e", {
                 },
                 effect(x=player[this.layer].buyables[this.id]) { // Effects of owning x of the items, x is a decimal
 					let eff = [Decimal.pow(x.add(1),getELevel().gte(3000)?4:getELevel().gte(1750)?3.5:getELevel().gte(750)?3:getELevel().gte(300)?2.5:2),Decimal.add(1,x.add(1).mul(getELevel().gte(8000)?1:getELevel().gte(4500)?0.5:getELevel().gte(3500)?0.4:getELevel().gte(2000)?0.3:getELevel().gte(1000)?0.2:getELevel().gte(450)?0.15:0.1))];
+					if(getELevel().gte(200000))eff[1]=eff[1].max(x.add(1).pow(2).div(100));
 					return eff;
                 },
                 display() { // Everything else displayed in the buyable button after the title
@@ -856,7 +911,7 @@ addLayer("e", {
                     return player.p.points.gte(tmp[this.layer].buyables[this.id].cost)},
                 buy() { 
                     cost = tmp[this.layer].buyables[this.id].cost
-                    player.p.points = player.p.points.sub(cost)	
+                    if(getELevel().lt(200000))player.p.points = player.p.points.sub(cost)	
                     player[this.layer].buyables[this.id] = player[this.layer].buyables[this.id].add(1)
                 },
                 buyMax() {}, // You'll have to handle this yourself if you want
@@ -867,6 +922,7 @@ addLayer("e", {
                 cost(x=player[this.layer].buyables[this.id]) { // cost for buying xth buyable, can be an object if there are multiple currencies
                     let cost = x.add(1).pow(4)
 					if(getELevel().gte(4000))cost=x.pow(3).add(x).mul(4).add(x.pow(2).mul(6).add(1));
+					if(getELevel().gte(300000))cost=x.add(1).pow(3);
                     return cost
                 },
                 effect(x=player[this.layer].buyables[this.id]) { // Effects of owning x of the items, x is a decimal
@@ -898,6 +954,7 @@ addLayer("e", {
                 },
                 effect(x=player[this.layer].buyables[this.id]) { // Effects of owning x of the items, x is a decimal
 					let eff = [Decimal.pow(x,getELevel().gte(3000)?4:getELevel().gte(1750)?3.5:getELevel().gte(750)?3:getELevel().gte(300)?2.5:2),Decimal.add(1,x.mul(getELevel().gte(8000)?1:getELevel().gte(4500)?0.5:getELevel().gte(3500)?0.4:getELevel().gte(2000)?0.3:getELevel().gte(1000)?0.2:getELevel().gte(450)?0.15:0.1))];
+					if(getELevel().gte(200000))eff[1]=eff[1].max(x.add(1).pow(2).div(100));
 					return eff;
                 },
                 display() { // Everything else displayed in the buyable button after the title
@@ -912,7 +969,7 @@ addLayer("e", {
                     return player.p.points.gte(tmp[this.layer].buyables[this.id].cost)},
                 buy() { 
                     cost = tmp[this.layer].buyables[this.id].cost
-                    player.p.points = player.p.points.sub(cost)	
+                    if(getELevel().lt(200000))player.p.points = player.p.points.sub(cost)	
                     player[this.layer].buyables[this.id] = player[this.layer].buyables[this.id].add(1)
                 },
                 buyMax() {}, // You'll have to handle this yourself if you want
@@ -926,6 +983,7 @@ addLayer("e", {
                 },
                 effect(x=player[this.layer].buyables[this.id]) { // Effects of owning x of the items, x is a decimal
 					let eff = [Decimal.pow(x,getELevel().gte(3000)?4:getELevel().gte(1750)?3.5:getELevel().gte(750)?3:getELevel().gte(300)?2.5:2),Decimal.add(1,x.mul(getELevel().gte(8000)?1:getELevel().gte(4500)?0.5:getELevel().gte(3500)?0.4:getELevel().gte(2000)?0.3:getELevel().gte(1000)?0.2:getELevel().gte(450)?0.15:0.1))];
+					if(getELevel().gte(200000))eff[1]=eff[1].max(x.add(1).pow(2).div(100));
 					return eff;
                 },
                 display() { // Everything else displayed in the buyable button after the title
@@ -940,7 +998,7 @@ addLayer("e", {
                     return player.p.points.gte(tmp[this.layer].buyables[this.id].cost)},
                 buy() { 
                     cost = tmp[this.layer].buyables[this.id].cost
-                    player.p.points = player.p.points.sub(cost)	
+                    if(getELevel().lt(200000))player.p.points = player.p.points.sub(cost)	
                     player[this.layer].buyables[this.id] = player[this.layer].buyables[this.id].add(1)
                 },
                 buyMax() {}, // You'll have to handle this yourself if you want
@@ -954,6 +1012,7 @@ addLayer("e", {
                 },
                 effect(x=player[this.layer].buyables[this.id]) { // Effects of owning x of the items, x is a decimal
 					let eff = [Decimal.pow(x,getELevel().gte(3000)?4:getELevel().gte(1750)?3.5:getELevel().gte(750)?3:getELevel().gte(300)?2.5:2),Decimal.add(1,x.mul(getELevel().gte(8000)?1:getELevel().gte(4500)?0.5:getELevel().gte(3500)?0.4:getELevel().gte(2000)?0.3:getELevel().gte(1000)?0.2:getELevel().gte(450)?0.15:0.1))];
+					if(getELevel().gte(200000))eff[1]=eff[1].max(x.add(1).pow(2).div(100));
 					return eff;
                 },
                 display() { // Everything else displayed in the buyable button after the title
@@ -968,7 +1027,7 @@ addLayer("e", {
                     return player.p.points.gte(tmp[this.layer].buyables[this.id].cost)},
                 buy() { 
                     cost = tmp[this.layer].buyables[this.id].cost
-                    player.p.points = player.p.points.sub(cost)	
+                    if(getELevel().lt(200000))player.p.points = player.p.points.sub(cost)	
                     player[this.layer].buyables[this.id] = player[this.layer].buyables[this.id].add(1)
                 },
                 buyMax() {}, // You'll have to handle this yourself if you want
@@ -982,6 +1041,7 @@ addLayer("e", {
                 },
                 effect(x=player[this.layer].buyables[this.id]) { // Effects of owning x of the items, x is a decimal
 					let eff = [Decimal.pow(x,getELevel().gte(3000)?4:getELevel().gte(1750)?3.5:getELevel().gte(750)?3:getELevel().gte(300)?2.5:2),Decimal.add(1,x.mul(getELevel().gte(8000)?1:getELevel().gte(4500)?0.5:getELevel().gte(3500)?0.4:getELevel().gte(2000)?0.3:getELevel().gte(1000)?0.2:getELevel().gte(450)?0.15:0.1))];
+					if(getELevel().gte(200000))eff[1]=eff[1].max(x.add(1).pow(2).div(100));
 					return eff;
                 },
                 display() { // Everything else displayed in the buyable button after the title
@@ -996,7 +1056,7 @@ addLayer("e", {
                     return player.p.points.gte(tmp[this.layer].buyables[this.id].cost)},
                 buy() { 
                     cost = tmp[this.layer].buyables[this.id].cost
-                    player.p.points = player.p.points.sub(cost)	
+                    if(getELevel().lt(200000))player.p.points = player.p.points.sub(cost)	
                     player[this.layer].buyables[this.id] = player[this.layer].buyables[this.id].add(1)
                 },
                 buyMax() {}, // You'll have to handle this yourself if you want
@@ -1010,6 +1070,7 @@ addLayer("e", {
                 },
                 effect(x=player[this.layer].buyables[this.id]) { // Effects of owning x of the items, x is a decimal
 					let eff = [Decimal.pow(x,getELevel().gte(3000)?4:getELevel().gte(1750)?3.5:getELevel().gte(750)?3:getELevel().gte(300)?2.5:2),Decimal.add(1,x.mul(getELevel().gte(8000)?1:getELevel().gte(4500)?0.5:getELevel().gte(3500)?0.4:getELevel().gte(2000)?0.3:getELevel().gte(1000)?0.2:getELevel().gte(450)?0.15:0.1))];
+					if(getELevel().gte(200000))eff[1]=eff[1].max(x.add(1).pow(2).div(100));
 					return eff;
                 },
                 display() { // Everything else displayed in the buyable button after the title
@@ -1024,7 +1085,7 @@ addLayer("e", {
                     return player.p.points.gte(tmp[this.layer].buyables[this.id].cost)},
                 buy() { 
                     cost = tmp[this.layer].buyables[this.id].cost
-                    player.p.points = player.p.points.sub(cost)	
+                    if(getELevel().lt(200000))player.p.points = player.p.points.sub(cost)	
                     player[this.layer].buyables[this.id] = player[this.layer].buyables[this.id].add(1)
                 },
                 buyMax() {}, // You'll have to handle this yourself if you want
@@ -1036,7 +1097,7 @@ addLayer("e", {
 addLayer("t", {
     name: "T", // This is optional, only used in a few places, If absent it just uses the layer id.
     symbol: "目标", // This appears on the layer's node. Default is the id with the first letter capitalized
-    position: 0, // Horizontal position within a row. By default it uses the layer id and sorts in alphabetical order
+    position: 1, // Horizontal position within a row. By default it uses the layer id and sorts in alphabetical order
     startData() { return {
         unlocked: true,
 		points: new Decimal(0),
@@ -1055,7 +1116,7 @@ addLayer("t", {
     gainExp() { // Calculate the exponent on main currency from bonuses
         return new Decimal(1)
     },
-    row: 1, // Row the layer is in on the tree (0 is the first row)
+    row: 2, // Row the layer is in on the tree (0 is the first row)
     hotkeys: [
     ],
 	branches: ['p'],
@@ -1292,6 +1353,62 @@ addLayer("t", {
 				return "米袋加成更便宜。";
 			},
         },
+		{
+			requirementDescription: "完成100个目标",
+            done() {return getRank().gte(100)}, // Used to determine when to give the milestone
+            effectDescription: function(){
+				return "解锁新的层级。";
+			},
+        },
+		{
+			requirementDescription: "完成110个目标",
+            done() {return getRank().gte(110)}, // Used to determine when to give the milestone
+            effectDescription: function(){
+				return "自动数米加成效果更好。";
+			},
+        },
+		{
+			requirementDescription: "完成125个目标",
+            done() {return getRank().gte(125)}, // Used to determine when to give the milestone
+            effectDescription: function(){
+				return "根据已完成的目标数量，第一行钻石升级和钻石升级“自动数米”更好。";
+			},
+        },
+		{
+			requirementDescription: "完成150个目标",
+            done() {return getRank().gte(150)}, // Used to determine when to give the milestone
+            effectDescription: function(){
+				return "钻石升级不再消耗钻石。";
+			},
+        },
+		{
+			requirementDescription: "完成160个目标",
+            done() {return getRank().gte(160)}, // Used to determine when to give the milestone
+            effectDescription: function(){
+				return "米袋加成效果更好。";
+			},
+        },
+		{
+			requirementDescription: "完成175个目标",
+            done() {return getRank().gte(175)}, // Used to determine when to give the milestone
+            effectDescription: function(){
+				return "解锁工人升级。";
+			},
+        },
+		{
+			requirementDescription: "完成185个目标",
+            done() {return getRank().gte(185)}, // Used to determine when to give the milestone
+            effectDescription: function(){
+				return "解锁自动购买米袋加成。";
+			},
+        },
+		{
+			requirementDescription: "完成200个目标",
+            done() {return getRank().gte(200)}, // Used to determine when to give the milestone
+            effectDescription: function(){
+				return "解锁新的层级。";
+			},
+        },
 	],
 	clickables: {
 			11: {
@@ -1318,7 +1435,7 @@ addLayer("t", {
                     return cost
                 },
                 effect(x=player[this.layer].buyables[this.id]) { // Effects of owning x of the items, x is a decimal
-					let eff = Decimal.add(1,x).pow(getRank().gte(45)?getRank().div(100).add(1):1)
+					let eff = Decimal.add(1,x).pow(getRank().gte(125)?getRank().div(50):getRank().gte(45)?getRank().div(100).add(1):1)
 					return eff;
                 },
                 display() { // Everything else displayed in the buyable button after the title
@@ -1346,7 +1463,7 @@ addLayer("t", {
                     return cost
                 },
                 effect(x=player[this.layer].buyables[this.id]) { // Effects of owning x of the items, x is a decimal
-					let eff = Decimal.add(1,x).pow(getRank().gte(45)?getRank().div(100).add(1):1)
+					let eff = Decimal.add(1,x).pow(getRank().gte(125)?getRank().div(50):getRank().gte(45)?getRank().div(100).add(1):1)
 					return eff;
                 },
                 display() { // Everything else displayed in the buyable button after the title
@@ -1374,7 +1491,7 @@ addLayer("t", {
                     return cost
                 },
                 effect(x=player[this.layer].buyables[this.id]) { // Effects of owning x of the items, x is a decimal
-					let eff = Decimal.add(1,x).pow(getRank().gte(45)?getRank().div(100).add(1):1)
+					let eff = Decimal.add(1,x).pow(getRank().gte(125)?getRank().div(50):getRank().gte(45)?getRank().div(100).add(1):1)
 					return eff;
                 },
                 display() { // Everything else displayed in the buyable button after the title
@@ -1433,7 +1550,7 @@ addLayer("t", {
                     return cost
                 },
                 effect(x=player[this.layer].buyables[this.id]) { // Effects of owning x of the items, x is a decimal
-					let eff = Decimal.add(1,x)
+					let eff = Decimal.add(1,x).pow(getRank().gte(125)?getRank().div(100):1)
 					return eff;
                 },
                 display() { // Everything else displayed in the buyable button after the title
@@ -1487,6 +1604,7 @@ addLayer("t", {
 	getBuyPoint(){
 		let bp=player.t.points.pow(2);
 		bp=bp.mul(layers.s.effect4()).floor().add(1e-10);
+		if(getRank().gte(150))return bp;
 		bp=bp.sub(Decimal.pow(2,player.t.buyables[11].add(getRank().gte(85)?0:getRank().gte(58)?1:getRank().gte(14)?2:3)).sub(getRank().gte(85)?1:getRank().gte(58)?2:getRank().gte(14)?4:8));
 		bp=bp.sub(Decimal.pow(2,player.t.buyables[12].add(getRank().gte(85)?0:getRank().gte(58)?1:getRank().gte(14)?2:3)).sub(getRank().gte(85)?1:getRank().gte(58)?2:getRank().gte(14)?4:8));
 		bp=bp.sub(Decimal.pow(2,player.t.buyables[13].add(getRank().gte(85)?0:getRank().gte(58)?1:getRank().gte(14)?2:3)).sub(getRank().gte(85)?1:getRank().gte(58)?2:getRank().gte(14)?4:8));
@@ -1834,6 +1952,91 @@ addLayer("a", {
 			done() {return player.p.buyables[23].gte(100)},
 			tooltip: "达到100级米袋加成。",
 		},
+		95:{
+			name: "协同工作",
+			done() {return player.g.points.gte(1)},
+			tooltip: "拥有1名工人。",
+		},
+		96:{
+			name: "白金自动机加成",
+			done() {return player.p.buyables[22].gte(10000)},
+			tooltip: "达到10000级自动数米加成。",
+		},
+		97:{
+			name: "米神供奉者 7",
+			done() {return layers.s.effect5().gte(2)},
+			tooltip: "米神的成就点加成达到2倍。",
+		},
+		101:{
+			name: "一个小组",
+			done() {return player.g.points.gte(10)},
+			tooltip: "拥有10名工人。",
+		},
+		102:{
+			name: "闪光加成",
+			done() {return player.p.buyables[13].gte(5000000)},
+			tooltip: "达到5000000级数米加成。",
+		},
+		103:{
+			name: "白银米袋加成",
+			done() {return player.p.buyables[23].gte(500)},
+			tooltip: "达到500级米袋加成。",
+		},
+		104:{
+			name: "超级米袋",
+			done() {return buyableEffect("p",21).gte(25)},
+			tooltip: "米袋倍数达到100。",
+		},
+		105:{
+			name: "加成王者",
+			done() {return player.p.buyables[13].gte(1e8)},
+			tooltip: "达到一亿级数米加成。",
+		},
+		106:{
+			name: "钻石自动机加成",
+			done() {return player.p.buyables[22].gte(200000)},
+			tooltip: "达到200000级自动数米加成。",
+		},
+		107:{
+			name: "转基因米",
+			done() {return getRank().gte(200)},
+			tooltip: "完成200个目标。",
+		},
+		111:{
+			name: "元-成就",
+			done() {return player.a.points.gte(333)},
+			tooltip: "拥有333成就点。奖励：成就点对金币的加成更好。",
+		},
+		112:{
+			name: "黄金米袋加成",
+			done() {return player.p.buyables[23].gte(2000)},
+			tooltip: "达到2000级米袋加成。",
+		},
+		113:{
+			name: "好多金币",
+			done() {return player.p.points.gte(1e50)},
+			tooltip: "拥有1e50金币。",
+		},
+		114:{
+			name: "米神供奉者 8",
+			done() {return layers.s.effect4().gte(10)},
+			tooltip: "米神的钻石加成达到10倍。",
+		},
+		115:{
+			name: "钻石米袋加成",
+			done() {return player.p.buyables[23].gte(10000)},
+			tooltip: "达到10000级米袋加成。",
+		},
+		116:{
+			name: "闪光自动机加成",
+			done() {return player.p.buyables[22].gte(5000000)},
+			tooltip: "达到5000000级自动数米加成。",
+		},
+		117:{
+			name: "即将无限",
+			done() {return getRank().gte(300)},
+			tooltip: "完成300个目标。",
+		},
 	},
 })
 
@@ -1841,7 +2044,7 @@ addLayer("a", {
 addLayer("s", {
     name: "S", // This is optional, only used in a few places, If absent it just uses the layer id.
     symbol: "米神", // This appears on the layer's node. Default is the id with the first letter capitalized
-    position: 0, // Horizontal position within a row. By default it uses the layer id and sorts in alphabetical order
+    position: 2, // Horizontal position within a row. By default it uses the layer id and sorts in alphabetical order
     startData() { return {
         unlocked: true,
 		points: new Decimal(0),
@@ -1860,7 +2063,7 @@ addLayer("s", {
     gainExp() { // Calculate the exponent on main currency from bonuses
         return new Decimal(1)
     },
-    row: '1', // Row the layer is in on the tree (0 is the first row)
+    row: 2, // Row the layer is in on the tree (0 is the first row)
     hotkeys: [
     ],
 	branches: ['p'],
@@ -1934,4 +2137,194 @@ addLayer("s", {
 		}],
 	],
     layerShown(){return getRank().gte(20)},
+})
+
+
+addLayer("g", {
+    name: "G", // This is optional, only used in a few places, If absent it just uses the layer id.
+    symbol: "工人", // This appears on the layer's node. Default is the id with the first letter capitalized
+    position: 2, // Horizontal position within a row. By default it uses the layer id and sorts in alphabetical order
+    startData() { return {
+        unlocked: true,
+		points: new Decimal(0),
+    }},
+    color: "#999999",
+    requires: new Decimal(1e29), // Can be a function that takes requirement increases into account
+    resource: "数米工人", // Name of prestige currency
+    baseResource: "金币", // Name of resource prestige is based on
+    baseAmount() {return player.p.points}, // Get the current amount of baseResource
+    type: "static", // normal: cost to gain currency depends on amount gained. static: cost depends on how much you already have
+    exponent: 1.5, // Prestige currency exponent
+	base: 2,
+    gainMult(a) { // Calculate the multiplier for main currency from bonuses
+        mult = new Decimal(1)
+        return mult
+    },
+    gainExp() { // Calculate the exponent on main currency from bonuses
+        return new Decimal(1)
+    },
+    row: 1, // Row the layer is in on the tree (0 is the first row)
+    hotkeys: [
+    ],
+	branches: ['p'],
+	update(diff){
+		
+	},
+	buyables:{
+		11: {
+			title: "工作速度", // Optional, displayed at the top in a larger font
+			cost(x=player[this.layer].buyables[this.id]) { // cost for buying xth buyable, can be an object if there are multiple currencies
+				let cost = Decimal.pow(10,x).mul(1e40);
+				return cost
+			},
+			effect(x=player[this.layer].buyables[this.id]) { // Effects of owning x of the items, x is a decimal
+				let eff = x.add(1);
+				return eff;
+			},
+			display() { // Everything else displayed in the buyable button after the title
+				let data = tmp[this.layer].buyables[this.id]
+				return "等级："+formatWhole(player[this.layer].buyables[this.id])+"\n\
+				工人的自动数米速度加成：" + format(data.effect) + "倍\n\
+				花费：" + formatWhole(data.cost) + " 金币";
+			},
+			unlocked() { return true; }, 
+			canAfford() {
+				return player.p.points.gte(tmp[this.layer].buyables[this.id].cost)},
+			buy() { 
+				cost = tmp[this.layer].buyables[this.id].cost
+				player.p.points = player.p.points.sub(cost)	
+				player[this.layer].buyables[this.id] = player[this.layer].buyables[this.id].add(1)
+			},
+			buyMax() {}, // You'll have to handle this yourself if you want
+			style: {'height':'222px'},
+		},
+		12: {
+			title: "工作质量", // Optional, displayed at the top in a larger font
+			cost(x=player[this.layer].buyables[this.id]) { // cost for buying xth buyable, can be an object if there are multiple currencies
+				let cost = Decimal.pow(1000,x).mul(1e45);
+				return cost
+			},
+			effect(x=player[this.layer].buyables[this.id]) { // Effects of owning x of the items, x is a decimal
+				let eff = x.mul(0.001).add(0.005);
+				return eff;
+			},
+			display() { // Everything else displayed in the buyable button after the title
+				let data = tmp[this.layer].buyables[this.id]
+				return "等级："+formatWhole(player[this.layer].buyables[this.id])+"\n\
+				工人的数米能力等级指数：+" + format(data.effect) + "\n\
+				花费：" + formatWhole(data.cost) + " 金币";
+			},
+			unlocked() { return true; }, 
+			canAfford() {
+				return player.p.points.gte(tmp[this.layer].buyables[this.id].cost)},
+			buy() { 
+				cost = tmp[this.layer].buyables[this.id].cost
+				player.p.points = player.p.points.sub(cost)	
+				player[this.layer].buyables[this.id] = player[this.layer].buyables[this.id].add(1)
+			},
+			buyMax() {}, // You'll have to handle this yourself if you want
+			style: {'height':'222px'},
+		},
+	},
+	effect1(){
+		return player.g.points.mul(buyableEffect("g",11)).add(1);
+	},
+	effect2(){
+		return player.g.points.mul(buyableEffect("g",12)).add(1);
+	},
+	effectDescription(){
+		let data=tmp[this.layer];
+		return "自动数米速度变为原来的"+format(data.effect1)+"倍，数米能力等级变为原来的"+format(data.effect2)+"次方";
+	},
+	tabFormat: [
+		"main-display",
+		"prestige-button",
+		"resource-display",
+		["display-text","本层级不会重置任何东西。"],"buyables"
+	],
+    layerShown(){return getRank().gte(100)},
+	resetsNothing: true,
+})
+
+
+addLayer("n", {
+    name: "N", // This is optional, only used in a few places, If absent it just uses the layer id.
+    symbol: "基因", // This appears on the layer's node. Default is the id with the first letter capitalized
+    position: 0, // Horizontal position within a row. By default it uses the layer id and sorts in alphabetical order
+    startData() { return {
+        unlocked: true,
+		points: new Decimal(0),
+		progress: [
+			new Decimal(0),
+		],
+    }},
+    color: "#FF6666",
+    requires: new Decimal(10), // Can be a function that takes requirement increases into account
+    resource: "突变基因", // Name of prestige currency
+    baseResource: "金币", // Name of resource prestige is based on
+    baseAmount() {return player.p.points}, // Get the current amount of baseResource
+    type: "none", // normal: cost to gain currency depends on amount gained. static: cost depends on how much you already have
+    exponent: 1.5, // Prestige currency exponent
+	base: 2,
+    gainMult(a) { // Calculate the multiplier for main currency from bonuses
+        mult = new Decimal(1)
+        return mult
+    },
+    gainExp() { // Calculate the exponent on main currency from bonuses
+        return new Decimal(1)
+    },
+    row: 1, // Row the layer is in on the tree (0 is the first row)
+    hotkeys: [
+    ],
+	branches: ['p'],
+	update(diff){
+		player.n.progress[0]=player.n.progress[0].add(player.points.add(10).log10().div(200).pow(2).mul(player.n.buyables[11].sqrt()).mul(Math.random()*20+10).mul(diff));
+		if(player.n.progress[0].gte(100)){
+			player.n.points=player.n.points.add(player.n.progress[0].div(100).floor());
+			player.n.progress[0]=player.n.progress[0].sub(player.n.progress[0].div(100).floor().mul(100));
+		}
+	},
+	buyables:{
+		11: {
+			title: "基因突变", // Optional, displayed at the top in a larger font
+			cost(x=player[this.layer].buyables[this.id]) { // cost for buying xth buyable, can be an object if there are multiple currencies
+				let cost = Decimal.pow(100,x).mul(1e45);
+				return cost
+			},
+			effect(x=player[this.layer].buyables[this.id]) { // Effects of owning x of the items, x is a decimal
+				let eff = x.mul(0.001).add(0.005);
+				return eff;
+			},
+			display() { // Everything else displayed in the buyable button after the title
+				let data = tmp[this.layer].buyables[this.id]
+				return "等级："+formatWhole(player[this.layer].buyables[this.id])+"\n\
+				基于数米数量增加突变进度\n\
+				花费：" + formatWhole(data.cost) + " 金币";
+			},
+			unlocked() { return true; }, 
+			canAfford() {
+				return player.p.points.gte(tmp[this.layer].buyables[this.id].cost)},
+			buy() { 
+				cost = tmp[this.layer].buyables[this.id].cost
+				player.p.points = player.p.points.sub(cost)	
+				player[this.layer].buyables[this.id] = player[this.layer].buyables[this.id].add(1)
+			},
+			buyMax() {}, // You'll have to handle this yourself if you want
+			style: {'height':'222px'},
+		},
+	},
+	effect(){
+		return player.n.points.div(10).add(1);
+	},
+	effectDescription(){
+		let data=tmp[this.layer];
+		return "数米能力变为原来的"+format(data.effect)+"倍";
+	},
+	tabFormat: [
+		"main-display",
+		["display-text",function(){return "突变进度：" + format(player[this.layer].progress[0]) + "%";}],
+		"buyables",
+	],
+    layerShown(){return getRank().gte(200)},
+	resetsNothing: true,
 })

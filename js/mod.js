@@ -13,7 +13,7 @@ let modInfo = {
 
 // Set your version in num and name
 let VERSION = {
-	num: "0.2.2",
+	num: "0.4",
 	name: "1",
 }
 
@@ -92,12 +92,13 @@ var displayThings = [
 		return "当前为第"+formatWhole(level.add(1))+"桶米，进度："+formatWhole(prog)+"/"+formatWhole(req2)+"("+format(prog.div(req2).mul(100),5)+"%)";
 	},
 	function(){
-		if(player.points.gte("1e1051898400"))return "如果您每秒写3个数字，写下您数的米的数量需要"+format(player.points.add(1).log10().add(1).floor().div(1051898400))+"世纪。";
-		if(player.points.gte("1e10518984"))return "如果您每秒写3个数字，写下您数的米的数量需要"+format(player.points.add(1).log10().add(1).floor().div(10518984))+"年。";//365.2425
-		if(player.points.gte("1e876582"))return "如果您每秒写3个数字，写下您数的米的数量需要"+format(player.points.add(1).log10().add(1).floor().div(876582))+"个月。";//365.2425/12
-		if(player.points.gte("1e28800"))return "如果您每秒写3个数字，写下您数的米的数量需要"+format(player.points.add(1).log10().add(1).floor().div(28800))+"天。";
-		if(player.points.gte("1e1200"))return "如果您每秒写3个数字，写下您数的米的数量需要"+format(player.points.add(1).log10().add(1).floor().div(1200))+"小时。";
-		if(player.points.gte(1e300))return "如果您每秒写3个数字，写下您数的米的数量需要"+format(player.points.add(1).log10().add(1).floor().div(20))+"分钟。";
+		if(player.points.gte("e2.2e16"))return "如果您每秒写3个数字，写下您数的米的数量需要的时间，<br>太阳系绕银河系旋转了"+format(player.points.add(1).log10().add(1).floor().div(2.2e16))+"圈。";
+		if(player.points.gte("1e9467085600"))return "如果您每秒写3个数字，写下您数的米的数量需要"+format(player.points.add(1).log10().add(1).floor().div(9467085600))+"世纪。";
+		if(player.points.gte("1e94670856"))return "如果您每秒写3个数字，写下您数的米的数量需要"+format(player.points.add(1).log10().add(1).floor().div(94670856))+"年。";//365.2425
+		if(player.points.gte("1e7889238"))return "如果您每秒写3个数字，写下您数的米的数量需要"+format(player.points.add(1).log10().add(1).floor().div(7889238))+"个月。";//365.2425/12
+		if(player.points.gte("1e259200"))return "如果您每秒写3个数字，写下您数的米的数量需要"+format(player.points.add(1).log10().add(1).floor().div(259200))+"天。";
+		if(player.points.gte("1e10800"))return "如果您每秒写3个数字，写下您数的米的数量需要"+format(player.points.add(1).log10().add(1).floor().div(10800))+"小时。";
+		if(player.points.gte(1e180))return "如果您每秒写3个数字，写下您数的米的数量需要"+format(player.points.add(1).log10().add(1).floor().div(180))+"分钟。";
 		
 		if(player.points.gte(1e200))return "如果一粒米的体积为1普朗克体积，您数的米相当于"+format(player.points.floor().div(1e200))+"个维度。";
 		if(player.points.gte(1e176))return "如果一粒米的体积为1普朗克体积，您数的米相当于"+format(player.points.floor().div(1e176))+"个可观测宇宙。";
@@ -273,6 +274,7 @@ function getRankRequirement(c,x){
 }
 
 function getRankEffect2(){
+	if(getRank().gte(159))return Decimal.pow(getRank().div(53).mul(9),getRank().div(3));
 	if(getRank().gte(99))return Decimal.pow(4,getRank().sub(33).max(0));
 	if(getRank().gte(84))return Decimal.pow(3.5,getRank().sub(26).max(0));
 	if(getRank().gte(46))return Decimal.pow(3,getRank().sub(18).max(0));
