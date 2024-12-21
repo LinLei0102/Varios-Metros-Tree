@@ -71,10 +71,10 @@ var displayThings = [
 			}
 			if(getRank().gte(300)){
 				sc="1级折算|";
-				st=formatWhole(player.points);
 			}
 			if(getRank().gte(3912)){
 				sc="2级折算|";
+				st=formatWhole(player.points);
 			}
 			if(getRank().gte(10000)){
 				sc="3级折算|";
@@ -220,6 +220,14 @@ function getRank(){
 	return r;
 }
 
+function getTier(){
+	let r=getRank().sub(400).div(60).max(0).floor();
+	if(r.gte(10)){
+		r=getRank().div(10).sqrt().max(0).floor();
+	}
+	return r;
+}
+
 function getRequirement(c){
 	c=new Decimal(c);
 	if(c.gte(1e9)){
@@ -260,7 +268,7 @@ function getRequirement(c){
 
 function getRankRequirement(c,x){
 	c=new Decimal(c);let f=new Decimal(0);
-	if(c.lt(8))return new Decimal(0);
+	if(c.lte(0))return new Decimal(0);
 	if(c.lte(3912)){
 		c=c.add(7);
 		f=c.pow(2).mul(6).add(c).add(c).sub(300);
@@ -273,7 +281,18 @@ function getRankRequirement(c,x){
 	return getRequirement(f);
 }
 
+function getTierRequirement(c){
+	c=new Decimal(c);let f=new Decimal(0);
+	if(c.lt(10)){
+		f=c.mul(60).add(400);
+	}else{
+		f=c.pow(2).mul(10);
+	}
+	return f;
+}
+
 function getRankEffect2(){
+	if(getRank().gte(480))return Decimal.pow(getRank().div(25),getRank().div(2));
 	if(getRank().gte(159))return Decimal.pow(getRank().div(53).mul(9),getRank().div(3));
 	if(getRank().gte(99))return Decimal.pow(4,getRank().sub(33).max(0));
 	if(getRank().gte(84))return Decimal.pow(3.5,getRank().sub(26).max(0));
