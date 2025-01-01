@@ -13,7 +13,7 @@ let modInfo = {
 
 // Set your version in num and name
 let VERSION = {
-	num: "0.6",
+	num: "0.7",
 	name: "1",
 }
 
@@ -292,6 +292,10 @@ function getTierRequirement(c){
 }
 
 function getRankEffect2(){
+	if(getELevel().gte(3e8))return Decimal.pow(getRank().div(new Decimal(160).sub(getELevel().div(1e7).min(60))).max(10),getRank());
+	if(getELevel().gte(2.5e8))return Decimal.pow(getRank().div(new Decimal(250).sub(getELevel().div(2.5e6).min(120))).max(10),getRank());
+	if(getELevel().gte(1.5e8))return Decimal.pow(getRank().div(new Decimal(350).sub(getELevel().div(1e6).min(200))).max(10),getRank());
+	if(getELevel().gte(1e8))return Decimal.pow(getRank().div(new Decimal(500).sub(getELevel().div(5e5).min(300))).max(10),getRank());
 	if(getRank().gte(480))return Decimal.pow(getRank().div(25),getRank().div(2));
 	if(getRank().gte(159))return Decimal.pow(getRank().div(53).mul(9),getRank().div(3));
 	if(getRank().gte(99))return Decimal.pow(4,getRank().sub(33).max(0));
