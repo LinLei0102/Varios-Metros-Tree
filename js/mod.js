@@ -13,7 +13,7 @@ let modInfo = {
 
 // Set your version in num and name
 let VERSION = {
-	num: "0.7",
+	num: "0.8",
 	name: "1",
 }
 
@@ -79,6 +79,9 @@ var displayThings = [
 			if(getRank().gte(10000)){
 				sc="3级折算|";
 			}
+			if(getRank().gte(100000)){
+				return sc+"目标"+formatWhole(getRank().add(1))+"：数"+s+"粒米！当前："+format(getRequirement(getLevel()).div(getRankRequirement(getRank().add(1))).mul(100),5)+"%";
+			}
 			return sc+"目标"+formatWhole(getRank().add(1))+"：数"+s+"粒米！当前："+st+"/"+formatWhole(getRankRequirement(getRank().add(1)))+"("+format(getRequirement(getLevel()).div(getRankRequirement(getRank().add(1))).mul(100),5)+"%)";
 		}
 		return "目标：数一亿粒米！当前："+formatWhole(getRequirement(getLevel()))+"/"+formatWhole(1e8)+"("+format(getRequirement(getLevel()).div(1e6),5)+"%)";
@@ -142,7 +145,7 @@ var displayThings = [
 
 // Determines when the game "ends"
 function isEndgame() {
-	return player.points.gte(new Decimal("e280000000"))
+	return false;//player.points.gte(new Decimal("e280000000"))
 }
 
 
