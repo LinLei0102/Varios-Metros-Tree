@@ -282,16 +282,20 @@ addLayer("p", {
 					if(getELevel().gte(70000000))eff = eff.mul(getELevel());
 					eff = eff.mul(layers.et.buyables[11].effect());
 					if(getTier().gte(70))eff = eff.mul(layers.g.effect1());
-					eff = Decimal.add(1, eff.pow(layers.g.effect2()))
+					if(getTier().gte(144))eff = eff.mul(layers.s.effect1().pow(getTier().gte(250)?1:getTier().gte(183)?0.5:0.1));
+					if(hasUpgrade("y",14))eff = eff.mul(buyableEffect("t",12));
+					
+					eff = Decimal.add(1, eff.pow(layers.g.effect2()));
+					
 					if(getRank().gte(4) && getRank().lt(3240))eff = eff.mul(getLevel().div(400));
 					if(getRank().gte(7) && getRank().lt(700))eff = eff.mul(layers.p.buyables[13].effect());
 					if(getRank().gte(365))eff = eff.mul((player.timePlayed/100000)**2+1);
 					if(getELevel().gte(150) && getELevel().lt(70000000))eff = eff.mul(getELevel().div(100));
-					eff = eff.mul(buyableEffect("t",12));
+					if(!hasUpgrade("y",14))eff = eff.mul(buyableEffect("t",12));
 					if(hasAchievement("a",124))eff = eff.mul(player.a.points.add(1));
 					else if(hasAchievement("a",26))eff = eff.mul(player.a.points.div(10).add(1));
 					eff = eff.mul(getRankEffect2());
-					eff = eff.mul(layers.s.effect1());
+					if(getTier().lt(144))eff = eff.mul(layers.s.effect1());
 					eff = eff.mul(layers.n.effect());
 					if(getTier().gte(4))eff = eff.mul(getTier());
 					if(player.x.points.gte(16)&&player.x.points.lt(1024))eff = eff.mul(layers.x.effect());
@@ -299,7 +303,7 @@ addLayer("p", {
                 },
                 display() { // Everything else displayed in the buyable button after the title
                     let data = tmp[this.layer].buyables[this.id]
-					return "等级："+(getRank().gte(301)?"(":"")+formatWhole(player[this.layer].buyables[this.id])+(getRank().gte(301)?"×"+formatWhole(player.i.buyables[this.id].add(1).mul((getRank().gte(700))?(layers.p.buyables[13].effect()):1).mul((getRank().gte(3240))?(getLevel()):1).mul((getELevel().gte(70000000))?(getELevel()):1).mul((player.x.points.gte(1024))?(layers.x.effect()):1).mul((getTier().gte(70))?(layers.g.effect1()):1).mul(layers.et.buyables[11].effect()))+")":"")+(getRank().gte(100)?"<sup>"+format(layers.g.effect2())+"</sup>":"")+"\n\
+					return "等级："+(getRank().gte(301)?"(":"")+formatWhole(player[this.layer].buyables[this.id])+(getRank().gte(301)?"×"+formatWhole(player.i.buyables[this.id].add(1).mul((getRank().gte(700))?(layers.p.buyables[13].effect()):1).mul((getRank().gte(3240))?(getLevel()):1).mul((getELevel().gte(70000000))?(getELevel()):1).mul((player.x.points.gte(1024))?(layers.x.effect()):1).mul((getTier().gte(70))?(layers.g.effect1()):1).mul((getTier().gte(144))?(layers.s.effect1().pow(getTier().gte(250)?1:getTier().gte(183)?0.5:0.1)):1).mul(hasUpgrade("y",14)?buyableEffect("t",12):1).mul(layers.et.buyables[11].effect()))+")":"")+(getRank().gte(100)?"<sup>"+format(layers.g.effect2())+"</sup>":"")+"\n\
 					数米能力：" + formatWhole(data.effect) + "粒/次\n"+
 					(getRank().gte(70000)?("+"+formatWhole(player.p.points.mul(layers.t.buyables[23].effect()).mul(layers.t.buyables[21].effect()))+"/s"):(data.cost.lt(1)?("1金币可以提升"+formatWhole(data.cost.recip())+"级"):("花费：" + formatWhole(data.cost) + " 金币"))+(getRank().gte(15)&&getRank().lt(70000)?("\n\
 					当前总计花费：" + formatWhole(data.totalCost) + " 金币"):""));
@@ -416,7 +420,11 @@ addLayer("p", {
 				},
                 effect(x=player[this.layer].buyables[this.id]) { // Effects of owning x of the items, x is a decimal
 					let eff = new Decimal(x).mul(player.i.buyables[this.id].add(1)).mul(layers.et.buyables[11].effect()).add(1).cbrt().div(4);
-					if(eff.gte(1))eff=eff.log10().add(1);
+					if(getTier().gte(200)){
+						if(eff.gte(1))eff=Decimal.pow(10,eff.log10().sqrt());
+					}else{
+						if(eff.gte(1))eff=eff.log10().add(1);
+					}
 					eff = eff.mul(buyableEffect("p",23));
 					if(player.o.points.gte(6))eff = eff.mul(player.o.points);
 					return eff;
@@ -508,6 +516,11 @@ addLayer("p", {
                 effect(x=player[this.layer].buyables[this.id]) { // Effects of owning x of the items, x is a decimal
 					let eff = new Decimal(x).mul(player.i.buyables[this.id].add(1)).mul(layers.et.buyables[11].effect()).mul(3).add(1).log10().add(1).sqrt().pow(hasAchievement("a",141)?1.1:1);
 					if(getRank().gte(160))eff = new Decimal(x).mul(player.i.buyables[this.id].add(1)).mul(layers.et.buyables[11].effect()).mul(3).add(1).log10().add(1).pow(hasAchievement("a",141)?1.1:1);
+					
+					
+					if(hasUpgrade("y",23)){
+						eff = Decimal.pow(10,new Decimal(x).mul(player.i.buyables[this.id].add(1)).mul(layers.et.buyables[11].effect()).mul(3).add(1).log10().sqrt());
+					}
 					return eff;
                 },
                 display() { // Everything else displayed in the buyable button after the title
@@ -714,7 +727,15 @@ addLayer("e", {
 				player.e.buyables[21]=target;
 			}
 		}
-		if(getELevel().gte(1.7e10)){
+		if(hasUpgrade("y",33)){
+			player.e.buyables[11]=player.e.buyables[11].add(player.p.points.mul(diff));
+			player.e.buyables[12]=player.e.buyables[12].add(player.p.points.mul(diff));
+			player.e.buyables[13]=player.e.buyables[13].add(player.p.points.mul(diff));
+			player.e.buyables[14]=player.e.buyables[14].add(player.p.points.mul(diff));
+			player.e.buyables[15]=player.e.buyables[15].add(player.p.points.mul(diff));
+			player.e.buyables[16]=player.e.buyables[16].add(player.p.points.mul(diff));
+			player.e.buyables[21]=player.e.buyables[21].add(player.p.points.mul(diff));
+		}else if(getELevel().gte(1.7e10)){
 			for(let i=11;i<=16;i++){
 				let target=player.p.points.add(1).pow(1/i).ceil();
 				if(player.e.buyables[i].lte(target))player.e.buyables[i]=target;
@@ -1549,7 +1570,7 @@ addLayer("t", {
 			requirementDescription: "完成45个目标",
             done() {return getRank().gte(45)}, // Used to determine when to give the milestone
             effectDescription: function(){
-				return "根据已完成的目标数量，第一行钻石升级更好。";
+				return "根据已完成的目标数量（至多450000），第一行钻石升级更好。";
 			},
         },
 		{
@@ -1647,7 +1668,7 @@ addLayer("t", {
 			requirementDescription: "完成125个目标",
             done() {return getRank().gte(125)}, // Used to determine when to give the milestone
             effectDescription: function(){
-				return "根据已完成的目标数量，第一行钻石升级和钻石升级“自动数米”更好。";
+				return "根据已完成的目标数量（至多450000），第一行钻石升级和钻石升级“自动数米”更好。";
 			},
         },
 		{
@@ -1719,7 +1740,8 @@ addLayer("t", {
 					return cost
                 },
                 effect(x=player[this.layer].buyables[this.id]) { // Effects of owning x of the items, x is a decimal
-					let eff = Decimal.add(1,x).pow(getRank().gte(200000)?173:getRank().gte(128000)?getRank().div(8000).add(148):getRank().gte(48000)?getRank().div(2000).add(100):getRank().gte(16000)?getRank().div(800).add(64):getRank().gte(10000)?getRank().div(250).add(20):getRank().gte(1000)?getRank().div(200).add(10):getRank().gte(700)?getRank().sub(700).div(300).add(14):getRank().gte(125)?getRank().div(50):getRank().gte(45)?getRank().div(100).add(1):1)
+					if(getTier().gte(500))return Decimal.add(1,x).pow(getTier().mul(0.1).add(150));
+					let eff = Decimal.add(1,x).pow(getRank().gte(450000)?200:getRank().gte(280000)?getRank().div(10000).add(155):getRank().gte(128000)?getRank().div(8000).add(148):getRank().gte(48000)?getRank().div(2000).add(100):getRank().gte(16000)?getRank().div(800).add(64):getRank().gte(10000)?getRank().div(250).add(20):getRank().gte(1000)?getRank().div(200).add(10):getRank().gte(700)?getRank().sub(700).div(300).add(14):getRank().gte(125)?getRank().div(50):getRank().gte(45)?getRank().div(100).add(1):1)
 					return eff;
                 },
                 display() { // Everything else displayed in the buyable button after the title
@@ -1748,13 +1770,14 @@ addLayer("t", {
                     return cost
                 },
                 effect(x=player[this.layer].buyables[this.id]) { // Effects of owning x of the items, x is a decimal
-					let eff = Decimal.add(1,x).pow(getRank().gte(200000)?173:getRank().gte(128000)?getRank().div(8000).add(148):getRank().gte(48000)?getRank().div(2000).add(100):getRank().gte(16000)?getRank().div(800).add(64):getRank().gte(10000)?getRank().div(250).add(20):getRank().gte(1000)?getRank().div(200).add(10):getRank().gte(700)?getRank().sub(700).div(300).add(14):getRank().gte(125)?getRank().div(50):getRank().gte(45)?getRank().div(100).add(1):1)
+					if(getTier().gte(500))return Decimal.add(1,x).pow(getTier().mul(0.1).add(150));
+					let eff = Decimal.add(1,x).pow(getRank().gte(450000)?200:getRank().gte(280000)?getRank().div(10000).add(155):getRank().gte(128000)?getRank().div(8000).add(148):getRank().gte(48000)?getRank().div(2000).add(100):getRank().gte(16000)?getRank().div(800).add(64):getRank().gte(10000)?getRank().div(250).add(20):getRank().gte(1000)?getRank().div(200).add(10):getRank().gte(700)?getRank().sub(700).div(300).add(14):getRank().gte(125)?getRank().div(50):getRank().gte(45)?getRank().div(100).add(1):1)
 					return eff;
                 },
                 display() { // Everything else displayed in the buyable button after the title
                     let data = tmp[this.layer].buyables[this.id]
 					return "等级："+formatWhole(player[this.layer].buyables[this.id])+"\n\
-					数米能力变为原来的" + format(data.effect) + "倍\n\
+					数米能力"+(hasUpgrade("y",14)?"等级":"")+"变为原来的" + format(data.effect) + "倍\n\
 					花费：" + formatWhole(data.cost) + " 钻石";
                 },
                 unlocked() { return getRank().gte(4) }, 
@@ -1777,7 +1800,8 @@ addLayer("t", {
                     return cost
                 },
                 effect(x=player[this.layer].buyables[this.id]) { // Effects of owning x of the items, x is a decimal
-					let eff = Decimal.add(1,x).pow(getRank().gte(200000)?173:getRank().gte(128000)?getRank().div(8000).add(148):getRank().gte(48000)?getRank().div(2000).add(100):getRank().gte(16000)?getRank().div(800).add(64):getRank().gte(10000)?getRank().div(250).add(20):getRank().gte(1000)?getRank().div(200).add(10):getRank().gte(700)?getRank().sub(700).div(300).add(14):getRank().gte(125)?getRank().div(50):getRank().gte(45)?getRank().div(100).add(1):1)
+					if(getTier().gte(500))return Decimal.add(1,x).pow(getTier().mul(0.1).add(150));
+					let eff = Decimal.add(1,x).pow(getRank().gte(450000)?200:getRank().gte(280000)?getRank().div(10000).add(155):getRank().gte(128000)?getRank().div(8000).add(148):getRank().gte(48000)?getRank().div(2000).add(100):getRank().gte(16000)?getRank().div(800).add(64):getRank().gte(10000)?getRank().div(250).add(20):getRank().gte(1000)?getRank().div(200).add(10):getRank().gte(700)?getRank().sub(700).div(300).add(14):getRank().gte(125)?getRank().div(50):getRank().gte(45)?getRank().div(100).add(1):1)
 					return eff;
                 },
                 display() { // Everything else displayed in the buyable button after the title
@@ -1846,7 +1870,8 @@ addLayer("t", {
                     return cost
                 },
                 effect(x=player[this.layer].buyables[this.id]) { // Effects of owning x of the items, x is a decimal
-					let eff = Decimal.add(1,x).pow(getRank().gte(200000)?173:getRank().gte(128000)?getRank().div(8000).add(148):getRank().gte(48000)?getRank().div(2000).add(100):getRank().gte(16000)?getRank().div(800).add(64):getRank().gte(10000)?getRank().div(250).add(20):getRank().gte(2000)?getRank().div(200).add(10):getRank().gte(125)?getRank().div(100):1)
+					if(getTier().gte(500))return Decimal.add(1,x).pow(getTier().mul(0.1).add(150));
+					let eff = Decimal.add(1,x).pow(getRank().gte(450000)?200:getRank().gte(280000)?getRank().div(10000).add(155):getRank().gte(128000)?getRank().div(8000).add(148):getRank().gte(48000)?getRank().div(2000).add(100):getRank().gte(16000)?getRank().div(800).add(64):getRank().gte(10000)?getRank().div(250).add(20):getRank().gte(2000)?getRank().div(200).add(10):getRank().gte(125)?getRank().div(100):1)
 					return eff;
                 },
                 display() { // Everything else displayed in the buyable button after the title
@@ -1916,6 +1941,7 @@ addLayer("t", {
 		}
 		bp=bp.mul(layers.s.effect4());
 		bp=bp.mul(layers.i.buyables[31].effect());
+		bp=bp.mul(layers.et.buyables[21].effect());
 		bp=bp.floor().add(1e-10);
 		if(getTier().gte(2))bp=bp.mul(getTier());
 		if(player.o.points.gte(7))bp=bp.mul(player.o.points);
@@ -2717,6 +2743,61 @@ addLayer("a", {
 			done() {return player.u.points.gte(10)},
 			tooltip: "拥有10块土地。",
 		},
+		224:{
+			name: "1000000个0",
+			done() {return player.points.gte("1e1000000")},
+			tooltip: "数1e1000000粒米。",
+		},
+		225:{
+			name: "阶层晋升 XI",
+			done() {return getTier().gte(200)},
+			tooltip: "达到阶层200。奖励：米袋倍数更好。",
+		},
+		226:{
+			name: "工厂里的机器不比工人好吗？",
+			done() {return player.g.points.gte(1000)},
+			tooltip: "拥有1000名工人。",
+		},
+		227:{
+			name: "境界提升 VIII",
+			done() {return player.x.points.gte(1073741824)},
+			tooltip: "达到凝气·起·最终阶。",
+		},
+		231:{
+			name: "超级米神 III",
+			done() {return layers.s.effect6().add(10).log10().div(player.s.points.add(10).log10()).gte(1.5) && player.s.points.gte("1e10000")},
+			tooltip: "米神的帮助数米指数超过1.5。",
+		},
+		232:{
+			name: "10000000个0",
+			done() {return player.points.gte("1e10000000")},
+			tooltip: "数1e10000000粒米。",
+		},
+		233:{
+			name: "中级工厂群",
+			done() {return player.o.points.gte(30)},
+			tooltip: "拥有30个工厂。",
+		},
+		234:{
+			name: "阶层晋升 XII",
+			done() {return getTier().gte(500)},
+			tooltip: "达到阶层500。",
+		},
+		235:{
+			name: "境界提升 IX",
+			done() {return player.x.points.gte(Decimal.pow(4,16))},
+			tooltip: "达到凝气·承。",
+		},
+		236:{
+			name: "超级米神 IV",
+			done() {return layers.s.effect6().add(10).log10().div(player.s.points.add(10).log10()).gte(2) && player.s.points.gte("1e10000")},
+			tooltip: "米神的帮助数米指数超过2。",
+		},
+		237:{
+			name: "数一亿个零",
+			done() {return player.points.gte("1e1e8")},
+			tooltip: "数1e1e8粒米。当前残局就是这个成就。",
+		},
 	},
 })
 
@@ -2763,12 +2844,14 @@ addLayer("s", {
 		return player.s.points.add(1e25).log10().div(25).pow(getRank().gte(395)?15:getRank().gte(90)?9:getRank().gte(75)?8:getRank().gte(40)?7:getRank().gte(35)?5:4);
 	},
 	effect3(){
+		if(getTier().gte(250))return player.s.points.add(10).log10().pow(7);
 		if(getTier().gte(58))return player.s.points.add(10).log10().pow(5);
 		if(getRank().gte(940))return player.s.points.add(10).log10().pow(getRank().gte(2250)?4:getRank().gte(1960)?3.5:getRank().gte(1000)?3:2.5);
 		if(getRank().gte(800))return player.s.points.add(1e10).log10().div(10).pow(getRank().gte(850)?3:2.5);
 		return player.s.points.add(1e25).log10().div(25).pow(getRank().gte(395)?3:getRank().gte(90)?2.5:2);
 	},
 	effect4(){
+		if(hasUpgrade("y",15))return player.s.points.add(10).log10().pow(2.3);
 		if(getRank().gte(880))return player.s.points.add(10).log10().pow(getRank().gte(2250)?2:getRank().gte(1960)?1.7:getRank().gte(940)?1.5:1.2);
 		if(getRank().gte(740))return player.s.points.add(1e10).log10().div(10).pow(getRank().gte(800)?1.5:1.2);
 		return player.s.points.add(1e25).log10().div(25).pow(getRank().gte(395)?1.2:getRank().gte(35)?1:0);
@@ -2781,7 +2864,8 @@ addLayer("s", {
 		return ret;
 	},
 	effect6(){
-		if(getTier().gte(60))return Decimal.pow(10,player.s.points.add(10).log10().pow(getTier().mul(0.0001).add(1).min(1.1)));
+		if(getTier().gte(500))return Decimal.pow(10,player.s.points.add(10).log10().pow(getTier().mul(0.00001).add(1.045).min(1.1)));
+		if(getTier().gte(60))return Decimal.pow(10,player.s.points.add(10).log10().pow(getTier().mul(0.0001).add(1)));
 		if(getTier().gte(55))return Decimal.pow(10,player.s.points.add(10).log10().pow(1.005));
 		if(getTier().gte(50))return Decimal.pow(10,player.s.points.add(10).log10().pow(1.004));
 		if(getTier().gte(45))return Decimal.pow(10,player.s.points.add(10).log10().pow(1.003));
@@ -2791,6 +2875,7 @@ addLayer("s", {
 		return player.s.points.add(1).log10().mul(player.s.points).mul(getRank().gte(40)?0.001:0);
 	},
 	effect7(){
+		if(hasUpgrade("y",15))return player.s.points.add(10).log10().pow(7);
 		if(getRank().gte(880))return player.s.points.add(10).log10();
 		if(getRank().gte(850))return player.s.points.add(1e10).log10().div(10);
 		return player.s.points.add(getRank().gte(395)?1e25:1e75).log10().div(getRank().gte(395)?25:75).pow(getRank().gte(90)?1:0);
@@ -2819,6 +2904,7 @@ addLayer("s", {
 		["clickable",11],
 		["display-text","米神为你提供以下加成"],
 		["display-text",function(){
+			if(getTier().gte(144))return "数米能力等级："+format(layers.s.effect1().pow(getTier().gte(250)?1:getTier().gte(183)?0.5:0.1))+"倍";
 			return "数米能力："+format(layers.s.effect1())+"倍";
 		}],
 		["display-text",function(){
@@ -2874,7 +2960,9 @@ addLayer("g", {
     baseAmount() {return player.p.points}, // Get the current amount of baseResource
     type: "static", // normal: cost to gain currency depends on amount gained. static: cost depends on how much you already have
     exponent(){
-		if(getTier().gte(142))return new Decimal(1.385);
+		if(getTier().gte(500))return new Decimal(1.302).sub(getTier().mul(0.0001)).max(1.2);
+		if(getTier().gte(300))return new Decimal(1.352).sub(getTier().mul(0.0002));
+		if(getTier().gte(170))return new Decimal(1.442).sub(getTier().mul(0.0005));
 		if(getTier().gte(100))return new Decimal(1.527).sub(getTier().mul(0.001));
 		if(getTier().gte(92))return new Decimal(1.626).sub(getTier().mul(0.002));
 		if(getTier().gte(90))return new Decimal(1.625).sub(getTier().mul(0.002));
@@ -2926,13 +3014,14 @@ addLayer("g", {
 			effectMult(){
 				let eff = layers.i.buyables[32].effect();
 				eff = eff.mul(layers.o.effect1());
+				if(player.o.points.gte(30))eff = eff.mul(player.g.points.max(1).sqrt());
 				return eff;
 			},
 			display() { // Everything else displayed in the buyable button after the title
 				let data = tmp[this.layer].buyables[this.id]
 				return "等级："+formatWhole(player[this.layer].buyables[this.id])+(getRank().gte(385)?"×"+formatWhole(tmp.g.buyables[11].effectMult):"")+"\n\
 				工人的自动数米速度加成：" + format(data.effect) + "倍\n" +
-				((player.o.points.gte(4))?("+"+formatWhole(player.p.points.log10().pow(2).div(hasUpgrade("y",22)?1:10000))+"/s"):"花费：" + formatWhole(data.cost) + " 金币");
+				((player.o.points.gte(4))?("+"+formatWhole(player.p.points.log10().pow(hasUpgrade("y",25)?3:2).div(hasUpgrade("y",22)?1:10000))+"/s"):"花费：" + formatWhole(data.cost) + " 金币");
 			},
 			unlocked() { return true; }, 
 			canAfford() {
@@ -3102,10 +3191,10 @@ addLayer("n", {
 	update(diff){
 		
 		if(player[this.layer].buyables[11].gte(777)){
-			player.n.points=player.n.points.add(player.points.add(10).log10().pow(player.n.buyables[11].div(player[this.layer].buyables[11].gte(888)?8:player[this.layer].buyables[11].gte(800)?9:10)).max(player.points.add(10).log10().pow(3).mul(Decimal.pow(1.1,player.n.buyables[11]))).mul(layers.i.buyables[33].effect()).mul(player.n.gen[0].add(1)).mul(diff).mul(layers.u.effect1()).mul(player.x.points.gte(256)?layers.x.effect():1).mul(getTier().gte(100)?player.et.points.add(1):1).mul(getTier().gte(100)?player.a.points.add(1):1));
+			player.n.points=player.n.points.add(player.points.add(10).log10().pow(player.n.buyables[11].div(player[this.layer].buyables[11].gte(1420)?4:player[this.layer].buyables[11].gte(1366)?5:player[this.layer].buyables[11].gte(1200)?6:player[this.layer].buyables[11].gte(888)?8:player[this.layer].buyables[11].gte(800)?9:10)).max(player.points.add(10).log10().pow(3).mul(Decimal.pow(1.1,player.n.buyables[11]))).mul(layers.i.buyables[33].effect()).mul(player.n.gen[0].add(1)).mul(diff).mul(layers.u.effect1()).mul(player.x.points.gte(256)?layers.x.effect():1).mul(getTier().gte(100)?player.et.points.add(1):1).mul(getTier().gte(100)?player.a.points.add(1):1));
 			player.n.progress[0]=new Decimal(0);
 			for(var i=1;i<=11;i++){
-				player.n.progress[i]=player.n.progress[i].add(player.points.add(10).log10().pow(player.n.buyables[11].div(player[this.layer].buyables[11].gte(888)?70:player[this.layer].buyables[11].gte(800)?75:80)).max(player.points.add(10).log10().pow(3).mul(Decimal.pow(1.1,player.n.buyables[11]))).mul(layers.i.buyables[33].effect()).mul((i==1?player.n.points:player.n.gen[i-2]).pow(0.2)).mul(player.n.gen[i].add(1)).mul(diff).mul((player.x.points.gte(i==2?16384:4194304)?layers.x.effect():1)).mul(getRank().gte(30000)?player.et.points.add(1):1).mul(getTier().gte(100)?player.a.points.add(1):1));
+				player.n.progress[i]=player.n.progress[i].add(player.points.add(10).log10().pow(player.n.buyables[11].div(player[this.layer].buyables[11].gte(1420)?55:player[this.layer].buyables[11].gte(1366)?60:player[this.layer].buyables[11].gte(1200)?65:player[this.layer].buyables[11].gte(888)?70:player[this.layer].buyables[11].gte(800)?75:80)).max(player.points.add(10).log10().pow(3).mul(Decimal.pow(1.1,player.n.buyables[11]))).mul(layers.i.buyables[33].effect()).mul((i==1?player.n.points:player.n.gen[i-2]).pow(0.2)).mul(player.n.gen[i].add(1)).mul(diff).mul((player.x.points.gte(i==2?16384:4194304)?layers.x.effect():1)).mul(getRank().gte(30000)?player.et.points.add(1):1).mul(getTier().gte(100)?player.a.points.add(1):1));
 				player.n.gen[i-1]=player.n.gen[i-1].add(player.n.progress[i].div(100).floor());
 				player.n.progress[i]=player.n.progress[i].sub(player.n.progress[i].div(100).floor().mul(100));
 			}
@@ -3194,6 +3283,7 @@ addLayer("n", {
 			cost(x=player[this.layer].buyables[this.id]) { // cost for buying xth buyable, can be an object if there are multiple currencies
 				let cost = Decimal.pow(100,x).mul(1e45);
 				if(x.gte(256))cost = Decimal.pow(100,x);
+				if(hasUpgrade("y",24))cost = Decimal.pow(10,x);
 				return cost
 			},
 			effect(x=player[this.layer].buyables[this.id]) { // Effects of owning x of the items, x is a decimal
@@ -3460,6 +3550,27 @@ addLayer("n", {
 				return "总计数米的数量进一步增加突变基因获取。";
 			},
         },
+		{
+			requirementDescription: "基因突变1200级",
+            done() {return player[this.layer].buyables[11].gte(1200)}, // Used to determine when to give the milestone
+            effectDescription: function(){
+				return "总计数米的数量进一步增加突变基因获取。";
+			},
+        },
+		{
+			requirementDescription: "基因突变1366级",
+            done() {return player[this.layer].buyables[11].gte(1366)}, // Used to determine when to give the milestone
+            effectDescription: function(){
+				return "总计数米的数量进一步增加突变基因获取。";
+			},
+        },
+		{
+			requirementDescription: "基因突变1420级",
+            done() {return player[this.layer].buyables[11].gte(1420)}, // Used to determine when to give the milestone
+            effectDescription: function(){
+				return "总计数米的数量进一步增加突变基因获取。";
+			},
+        },
 	],
     layerShown(){return getRank().gte(200)},
 	resetsNothing: true,
@@ -3547,6 +3658,9 @@ addLayer("i", {
 		}
 		if(getRank().gte(60000)){
 			player.i.buyables[32]=player.i.buyables[32].add(layers.i.BuyableGain6().mul(diff));
+		}
+		if(getRank().gte(200000)){
+			player.i.buyables[31]=player.i.buyables[31].add(layers.i.BuyableGain6().mul(diff));
 		}
 	},
 	buyables:{
@@ -3736,8 +3850,8 @@ addLayer("i", {
 			display() { // Everything else displayed in the buyable button after the title
 				let data = tmp[this.layer].buyables[this.id]
 				return "等级："+formatWhole(player[this.layer].buyables[this.id])+"\n\
-				钻石获取变为原来的" + formatWhole(data.effect) + "倍\n\
-				花费：" + formatWhole(data.cost) + " 无限点数";
+				钻石获取变为原来的" + formatWhole(data.effect) + "倍\n" +
+				((getRank().gte(200000))?("+"+formatWhole(layers.i.BuyableGain6())+"/s"):("花费：" + formatWhole(data.cost) + " 无限点数"));
 			},
 			unlocked() { return getRank().gte(375)}, 
 			canAfford() {
@@ -3854,6 +3968,7 @@ addLayer("i", {
 		return player.i.points.add(10).log10().div(100).pow(5);
 	},
 	BuyableGain6(){
+		if(getRank().gte(1000000))return player.i.points.add(10).log10().div(200).pow(10);
 		return player.i.points.add(10).log10().div(400).pow(10);
 	},milestones: [
 		{
@@ -4074,7 +4189,7 @@ addLayer("x", {
 			if(player.g.buyables[12].lte(target))player.g.buyables[12]=target;
 			target=player.p.points.add(1).log10().div(5).max(0).ceil();
 			if(player.g.buyables[13].lte(target))player.g.buyables[13]=target;
-			target=player.p.points.add(1).log10().div(2).max(0).ceil();
+			target=player.p.points.add(1).log10().div(hasUpgrade("y",24)?1:2).max(0).ceil();
 			if(player.n.buyables[11].lte(target))player.n.buyables[11]=target;
 		}
 		if(player.x.points.gte(268435456)){
@@ -4199,6 +4314,13 @@ addLayer("x", {
             done() {return player.x.points.gte(268435456)}, // Used to determine when to give the milestone
             effectDescription: function(){
 				return "自动购买第2个基因可购买项，且不消耗金币。";
+			},
+        },
+		{
+			requirementDescription: "达到凝气·承·一阶",
+            done() {return player.x.points.gte(Decimal.pow(4,16))}, // Used to determine when to give the milestone
+            effectDescription: function(){
+				return "获得4倍永恒点数。";
 			},
         },
 	],
@@ -4495,6 +4617,34 @@ addLayer("r", {
 				return "解锁土地。";
 			},
         },
+		{
+			requirementDescription: "阶层144",
+            done() {return getTier().gte(144)}, // Used to determine when to give the milestone
+            effectDescription: function(){
+				return "米神的第1个加成改为增加数米能力等级。";
+			},
+        },
+		{
+			requirementDescription: "阶层183",
+            done() {return getTier().gte(183)}, // Used to determine when to give the milestone
+            effectDescription: function(){
+				return "米神提供更多加成。";
+			},
+        },
+		{
+			requirementDescription: "阶层250",
+            done() {return getTier().gte(250)}, // Used to determine when to give the milestone
+            effectDescription: function(){
+				return "米神提供更多加成。";
+			},
+        },
+		{
+			requirementDescription: "阶层500",
+            done() {return getTier().gte(500)}, // Used to determine when to give the milestone
+            effectDescription: function(){
+				return "根据阶层，第一行钻石升级和钻石升级“自动数米”更好。";
+			},
+        },
 	],
     layerShown(){return getRank().gte(460)},
 	resetsNothing: true,
@@ -4523,6 +4673,9 @@ addLayer("et", {
 			mult = player.i.points.add(2).log2().div(1024).pow(2).sub(1);
 		}
 		mult = mult.mul(layers.et.buyables[13].effect());
+		if(hasUpgrade("y",13))mult = mult.mul(5);
+		if(hasUpgrade("y",35))mult = mult.mul(5);
+		if(player.x.points.gte(Decimal.pow(4,16)))mult=mult.mul(4);
         return mult
     },
     gainExp() { // Calculate the exponent on main currency from bonuses
@@ -4536,6 +4689,7 @@ addLayer("et", {
 		player.et.points=player.et.points.add(layers.et.gainMult().mul(diff));
 		player.et.buyables[11]=player.et.buyables[11].add(player.et.points.mul(diff));
 		player.et.buyables[12]=player.et.buyables[12].add(player.et.points.mul(diff));
+		if(getRank().gte(555555))player.et.buyables[21]=player.et.buyables[21].add(player.et.points.mul(diff));
 	},
 	buyables:{
 		11: {
@@ -4608,6 +4762,27 @@ addLayer("et", {
                 purchaseLimit: 9e15,
 			style: {'height':'222px'},
 		},
+		21: {
+			title: "钻石加成", // Optional, displayed at the top in a larger font
+			cost(x=player[this.layer].buyables[this.id]) { // cost for buying xth buyable, can be an object if there are multiple currencies
+				let cost = new Decimal(1)
+				return cost
+			},
+			effect(x=player[this.layer].buyables[this.id]) { // Effects of owning x of the items, x is a decimal
+				let eff = Decimal.add(1, x)
+				return eff;
+			},
+			display() { // Everything else displayed in the buyable button after the title
+				let data = tmp[this.layer].buyables[this.id]
+				return "等级："+formatWhole(player[this.layer].buyables[this.id])+"\n\
+				钻石获取变为原来的" + formatWhole(data.effect) + "倍\n" +
+				("+"+format(player.et.points)+"/s");
+			},
+			unlocked() { return getRank().gte(555555);}, 
+			canAfford() { return false;},
+                purchaseLimit: 0,
+			style: {'height':'222px'},
+		},
 	},milestones: [
 		{
 			requirementDescription: "完成30000个目标",
@@ -4644,6 +4819,27 @@ addLayer("et", {
 				return "每秒增加所有金币升级的等级，增加的数值基于金币，且不消耗金币。";
 			},
         },
+		{
+			requirementDescription: "完成200000个目标",
+            done() {return getRank().gte(200000)}, // Used to determine when to give the milestone
+            effectDescription: function(){
+				return "每秒增加第7个无限可购买项的等级，增加的数值基于无限点数，且不消耗无限点数。";
+			},
+        },
+		{
+			requirementDescription: "完成555555个目标",
+            done() {return getRank().gte(555555)}, // Used to determine when to give the milestone
+            effectDescription: function(){
+				return "解锁新的永恒可购买项。";
+			},
+        },
+		{
+			requirementDescription: "完成1000000个目标",
+            done() {return getRank().gte(1000000)}, // Used to determine when to give the milestone
+            effectDescription: function(){
+				return "每秒增加第7-8个无限可购买项的等级，增加的数值基于无限点数，且不消耗无限点数。";
+			},
+        },
 	],
 	effect(){
 	},
@@ -4669,6 +4865,7 @@ addLayer("o", {
     }},
     color: "#cccccc",
     requires(){
+		if(hasUpgrade("y",32))return new Decimal(200);
 		return new Decimal(300);
 	}, // Can be a function that takes requirement increases into account
     resource: "数米工厂", // Name of prestige currency
@@ -4691,7 +4888,7 @@ addLayer("o", {
     ],
 	branches: ['p'],
 	update(diff){
-		if(player[this.layer].points.gte(4))player.g.buyables[11]=player.g.buyables[11].add(player.p.points.log10().pow(2).div(hasUpgrade("y",22)?1:10000).mul(diff));
+		if(player[this.layer].points.gte(4))player.g.buyables[11]=player.g.buyables[11].add(player.p.points.log10().pow(hasUpgrade("y",25)?3:2).div(hasUpgrade("y",22)?1:10000).mul(diff));
 	},
 	effect1(){
 		return Decimal.pow(2,player.o.points);
@@ -4735,6 +4932,13 @@ addLayer("o", {
 				return "让其中一个工厂转而生产钻石，使钻石乘以工厂的数量。";
 			},
         },
+		{
+			requirementDescription: "拥有30个工厂",
+            done() {return player[this.layer].points.gte(30)}, // Used to determine when to give the milestone
+            effectDescription: function(){
+				return "工作速度的加成基于工人更好。";
+			},
+        },
 	],
 })
 
@@ -4749,6 +4953,7 @@ addLayer("u", {
     }},
     color: "#996633",
     requires(){
+		if(hasUpgrade("y",31))return new Decimal("1e1400");
 		return new Decimal("1e1920");
 	}, // Can be a function that takes requirement increases into account
     resource: "块土地", // Name of prestige currency
@@ -4858,6 +5063,9 @@ addLayer("y", {
 				return "获得100倍无限点数。"
 			},
 			cost(){
+				if(hasUpgrade("y",14)&&hasUpgrade("y",15))return new Decimal(5);
+				if(hasUpgrade("y",14)||hasUpgrade("y",15))return new Decimal(4);
+				if(hasUpgrade("y",13))return new Decimal(3);
 				if(hasUpgrade("y",12))return new Decimal(2);
 				return new Decimal(1);
 			},
@@ -4869,10 +5077,46 @@ addLayer("y", {
 				return "自动获得工人。"
 			},
 			cost(){
-				if(hasUpgrade("y",11))return new Decimal(4);
-				return new Decimal(3);
+				if(hasUpgrade("y",14)&&hasUpgrade("y",15))return new Decimal(7);
+				if(hasUpgrade("y",14)||hasUpgrade("y",15))return new Decimal(6);
+				if(hasUpgrade("y",13))return new Decimal(5);
+				return new Decimal(4);
 			},
-			unlocked() { return hasUpgrade("y",22) || hasUpgrade("y",21); }, // The upgrade is only visible when this is true
+			unlocked() { return hasUpgrade("y",11); }, // The upgrade is only visible when this is true
+		},
+		13:{
+			title: "永恒加成 I",
+			description(){
+				return "获得5倍永恒点数。"
+			},
+			cost(){
+				if(hasUpgrade("y",14)&&hasUpgrade("y",15))return new Decimal(9);
+				if(hasUpgrade("y",14)||hasUpgrade("y",15))return new Decimal(8);
+				return new Decimal(7);
+			},
+			unlocked() { return hasUpgrade("y",12); }, // The upgrade is only visible when this is true
+		},
+		14:{
+			title: "钻石加成 I",
+			description(){
+				return "钻石升级“数米能力”的效果改为增加数米能力等级。"
+			},
+			cost(){
+				if(hasUpgrade("y",15))return new Decimal(12);
+				return new Decimal(11);
+			},
+			unlocked() { return hasUpgrade("y",13); }, // The upgrade is only visible when this is true
+		},
+		15:{
+			title: "米神加成 I",
+			description(){
+				return "米神提供更多加成。"
+			},
+			cost(){
+				if(hasUpgrade("y",14))return new Decimal(12);
+				return new Decimal(11);
+			},
+			unlocked() { return hasUpgrade("y",13); }, // The upgrade is only visible when this is true
 		},
 		21:{
 			title: "基因加成 I",
@@ -4880,6 +5124,9 @@ addLayer("y", {
 				return "基因重组更便宜。"
 			},
 			cost(){
+				if(hasUpgrade("y",24)&&hasUpgrade("y",25))return new Decimal(6);
+				if(hasUpgrade("y",24)||hasUpgrade("y",25))return new Decimal(5);
+				if(hasUpgrade("y",23))return new Decimal(4);
 				if(hasUpgrade("y",22))return new Decimal(3);
 				return new Decimal(2);
 			},
@@ -4891,10 +5138,108 @@ addLayer("y", {
 				return "工作速度等级增长速度更快。"
 			},
 			cost(){
+				if(hasUpgrade("y",24)&&hasUpgrade("y",25))return new Decimal(6);
+				if(hasUpgrade("y",24)||hasUpgrade("y",25))return new Decimal(5);
+				if(hasUpgrade("y",23))return new Decimal(4);
 				if(hasUpgrade("y",21))return new Decimal(3);
 				return new Decimal(2);
 			},
 			unlocked() { return true; }, // The upgrade is only visible when this is true
+		},
+		23:{
+			title: "米袋超加成 I",
+			description(){
+				return "米袋加成更好。"
+			},
+			cost(){
+				if(hasUpgrade("y",24)&&hasUpgrade("y",25))return new Decimal(11);
+				if(hasUpgrade("y",24)||hasUpgrade("y",25))return new Decimal(10);
+				return new Decimal(9);
+			},
+			unlocked() { return hasUpgrade("y",21)&&hasUpgrade("y",22); }, // The upgrade is only visible when this is true
+		},
+		24:{
+			title: "基因加成 II",
+			description(){
+				return "基因突变更便宜。"
+			},
+			cost(){
+				if(hasUpgrade("y",25))return new Decimal(14);
+				return new Decimal(13);
+			},
+			unlocked() { return hasUpgrade("y",23); }, // The upgrade is only visible when this is true
+		},
+		25:{
+			title: "工人加成 II",
+			description(){
+				return "工作速度等级增长速度更快。"
+			},
+			cost(){
+				if(hasUpgrade("y",24))return new Decimal(14);
+				return new Decimal(13);
+			},
+			unlocked() { return hasUpgrade("y",23); }, // The upgrade is only visible when this is true
+		},
+		31:{
+			title: "土地加成 I",
+			description(){
+				return "土地更便宜。"
+			},
+			cost(){
+				if(hasUpgrade("y",35))return new Decimal(9);
+				if(hasUpgrade("y",34))return new Decimal(8);
+				if(hasUpgrade("y",33))return new Decimal(7);
+				if(hasUpgrade("y",32))return new Decimal(6);
+				return new Decimal(5);
+			},
+			unlocked() { return true; }, // The upgrade is only visible when this is true
+		},
+		32:{
+			title: "工厂加成 I",
+			description(){
+				return "工厂更便宜。"
+			},
+			cost(){
+				if(hasUpgrade("y",35))return new Decimal(9);
+				if(hasUpgrade("y",34))return new Decimal(8);
+				if(hasUpgrade("y",33))return new Decimal(7);
+				if(hasUpgrade("y",31))return new Decimal(6);
+				return new Decimal(5);
+			},
+			unlocked() { return true; }, // The upgrade is only visible when this is true
+		},
+		33:{
+			title: "吃米加成 I",
+			description(){
+				return "所有吃米购买项的等级每秒增加金币的数量。"
+			},
+			cost(){
+				if(hasUpgrade("y",35))return new Decimal(12);
+				if(hasUpgrade("y",34))return new Decimal(11);
+				return new Decimal(10);
+			},
+			unlocked() { return hasUpgrade("y",31)&&hasUpgrade("y",32); }, // The upgrade is only visible when this is true
+		},
+		34:{
+			title: "目标加成 I",
+			description(){
+				return "完成10个目标的里程碑效果更好。"
+			},
+			cost(){
+				if(hasUpgrade("y",35))return new Decimal(16);
+				return new Decimal(15);
+			},
+			unlocked() { return hasUpgrade("y",33); }, // The upgrade is only visible when this is true
+		},
+		35:{
+			title: "永恒加成 II",
+			description(){
+				return "获得5倍永恒点数。"
+			},
+			cost(){
+				return new Decimal(16);
+			},
+			unlocked() { return hasUpgrade("y",34); }, // The upgrade is only visible when this is true
 		},
 	},
 	milestones: [

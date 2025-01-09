@@ -13,13 +13,13 @@ let modInfo = {
 
 // Set your version in num and name
 let VERSION = {
-	num: "0.8",
+	num: "1.0",
 	name: "1",
 }
 
 let changelog = ``
 
-let winText = `Congratulations! You have reached the end and beaten this game, but for now...`
+let winText = "你暂时已经达到了这个树MOD的残局，但是现在...";
 
 // If you add new functions anywhere inside of a layer, and those functions have an effect when called, add them here.
 // (The ones here are examples, all official functions are already taken care of)
@@ -145,7 +145,7 @@ var displayThings = [
 
 // Determines when the game "ends"
 function isEndgame() {
-	return false;//player.points.gte(new Decimal("e280000000"))
+	return player.points.gte(new Decimal("ee8"))
 }
 
 
@@ -295,6 +295,7 @@ function getTierRequirement(c){
 }
 
 function getRankEffect2(){
+	if(hasUpgrade("y",34))return Decimal.pow(getRank().div(25).max(10),getRank());
 	if(getELevel().gte(3e8))return Decimal.pow(getRank().div(new Decimal(160).sub(getELevel().div(1e7).min(60))).max(10),getRank());
 	if(getELevel().gte(2.5e8))return Decimal.pow(getRank().div(new Decimal(250).sub(getELevel().div(2.5e6).min(120))).max(10),getRank());
 	if(getELevel().gte(1.5e8))return Decimal.pow(getRank().div(new Decimal(350).sub(getELevel().div(1e6).min(200))).max(10),getRank());
