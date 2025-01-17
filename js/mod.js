@@ -13,7 +13,7 @@ let modInfo = {
 
 // Set your version in num and name
 let VERSION = {
-	num: "1.0",
+	num: "1.1",
 	name: "1",
 }
 
@@ -56,7 +56,7 @@ var displayThings = [
 	},
 	function(){
 		if(getRank().gte(1e8)){
-			sc="3级折算|";
+			sc="4级折算|";
 			return "您已经完成"+formatWhole(getRank())+"个"+sc+"目标";
 		}
 		if(getRank().gte(1)){
@@ -145,7 +145,7 @@ var displayThings = [
 
 // Determines when the game "ends"
 function isEndgame() {
-	return player.points.gte(new Decimal("ee8"))
+	return player.points.gte(new Decimal("ee11"))
 }
 
 
@@ -170,6 +170,11 @@ function fixOldSave(oldVersion){
 
 function getLevel(c=player.points){
 	c=new Decimal(c);
+	if(c.gte(Decimal.pow(10,5645745859.3095493795180608024408))){
+		let p=c;
+		p=p.log10().mul(38.160320066113671798072564386851).pow(1.5);
+		return p.floor();
+	}
 	if(c.gte(Decimal.pow(10,35622.24815))){
 		let p=c;
 		p=p.log10().div(35622.24815).pow(1/0.65).mul(1e9);
@@ -233,6 +238,10 @@ function getTier(){
 
 function getRequirement(c){
 	c=new Decimal(c);
+	if(c.gte(1e17)){
+		let p=Decimal.pow(10,c.pow(2/3).mul(0.02620523093798678738472959035643));
+		return p;
+	}
 	if(c.gte(1e9)){
 		let p=Decimal.pow(10,c.div(1e9).pow(0.65).mul(35622.24815));
 		return p;
@@ -295,6 +304,8 @@ function getTierRequirement(c){
 }
 
 function getRankEffect2(){
+	if(hasUpgrade("y",62))return Decimal.pow(getRank().max(10),getRank());
+	if(hasUpgrade("y",41))return Decimal.pow(getRank().div(10).max(10),getRank());
 	if(hasUpgrade("y",34))return Decimal.pow(getRank().div(25).max(10),getRank());
 	if(getELevel().gte(3e8))return Decimal.pow(getRank().div(new Decimal(160).sub(getELevel().div(1e7).min(60))).max(10),getRank());
 	if(getELevel().gte(2.5e8))return Decimal.pow(getRank().div(new Decimal(250).sub(getELevel().div(2.5e6).min(120))).max(10),getRank());
