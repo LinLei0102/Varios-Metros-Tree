@@ -145,7 +145,7 @@ var displayThings = [
 
 // Determines when the game "ends"
 function isEndgame() {
-	return getTier().get(1e8);
+	return getTier().gte(1e8);
 }
 
 
