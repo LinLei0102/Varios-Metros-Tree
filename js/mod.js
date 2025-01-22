@@ -13,8 +13,8 @@ let modInfo = {
 
 // Set your version in num and name
 let VERSION = {
-	num: "1.2",
-	name: "1",
+	num: "2.0",
+	name: "最终版",
 }
 
 let changelog = ``
@@ -145,7 +145,7 @@ var displayThings = [
 
 // Determines when the game "ends"
 function isEndgame() {
-	return getTier().gte(1e8);
+	return player.points.add(10).slog().gte(1.79769e308);
 }
 
 
